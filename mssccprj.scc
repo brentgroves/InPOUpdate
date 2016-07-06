@@ -1,0 +1,5 @@
+SCC = This is a Source Code Control file
+
+[POUpdate.vbp]
+SCC_Aux_Path =\\buschesv2\public\MIS\BuscheSourceCode,
+SCC_Project_Name ="$/POUpdate", EPAAAAAA
