@@ -1,78 +1,3 @@
-VERSION 5.00
-Begin VB.Form Main 
-   Caption         =   "Main"
-   ClientHeight    =   4290
-   ClientLeft      =   60
-   ClientTop       =   450
-   ClientWidth     =   6780
-   LinkTopic       =   "Form1"
-   ScaleHeight     =   4290
-   ScaleWidth      =   6780
-   StartUpPosition =   3  'Windows Default
-   Begin VB.CommandButton btnTransfer 
-      Caption         =   "&Start Transfer"
-      Height          =   1215
-      Left            =   1560
-      TabIndex        =   0
-      Top             =   1920
-      Width           =   2895
-   End
-   Begin VB.Image Image1 
-      Height          =   825
-      Left            =   120
-      Picture         =   "Main.frx":0000
-      Top             =   120
-      Width           =   1530
-   End
-   Begin VB.Label Label1 
-      Caption         =   "Click ""Start Transfer"" to Begin"
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   13.5
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   735
-      Left            =   1560
-      TabIndex        =   3
-      Top             =   960
-      Width           =   4215
-   End
-   Begin VB.Label Label 
-      Caption         =   "PoUpdate: Busche Indiana"
-      BeginProperty Font 
-         Name            =   "MS Sans Serif"
-         Size            =   13.5
-         Charset         =   0
-         Weight          =   400
-         Underline       =   0   'False
-         Italic          =   0   'False
-         Strikethrough   =   0   'False
-      EndProperty
-      Height          =   495
-      Left            =   1800
-      TabIndex        =   2
-      Top             =   120
-      Width           =   3855
-   End
-   Begin VB.Label lblStatus 
-      Caption         =   "Not Started"
-      ForeColor       =   &H000080FF&
-      Height          =   495
-      Left            =   720
-      TabIndex        =   1
-      Top             =   3480
-      Width           =   4935
-   End
-End
-Attribute VB_Name = "Main"
-Attribute VB_GlobalNameSpace = False
-Attribute VB_Creatable = False
-Attribute VB_PredeclaredId = True
-Attribute VB_Exposed = False
 Private Sub btnTransfer_Click()
   Main
 End Sub
@@ -163,20 +88,20 @@ Const adCmdStoredProc = &H4
 
  '*****************Select databases for Alabama or Indiana**********************
 
-    SourceConn.Open = "Provider=SQLOLEDB.1;Data Source=Busche-SQL; Initial Catalog=Cribmaster;user id = 'sa';password='buschecnc1'"
-    DestinationConn.Open = "Provider=SQLOLEDB.1;Data Source=Busche-SQL-1; Initial Catalog=m2mdata01;user id = 'sa';password='buschecnc1'"
-    
-    '**********PO Status Number 3 = Requested
-    SourceRecordset.Open "SELECT * FROM [PO]  WHERE [PO].POSTATUSNO = 3 and [PO].SITEID <> '90'", SourceConn, adOpenKeyset
-    
+SourceConn.Open = "Provider=SQLOLEDB.1;Data Source=Hartselle-SQL-1; Initial Catalog=Cribmaster;user id = 'sa';password='buschecnc1'"
+DestinationConn.Open = "Provider=SQLOLEDB.1;Data Source=Hartselle-SQL; Initial Catalog=m2mdata01;user id = 'sa';password='buschecnc1'"
+SourceRecordset.Open "SELECT * FROM [PO]  WHERE [PO].POSTATUSNO = 3 and [PO].SITEID <> '90'", SourceConn, adOpenKeyset
+ 
+ 
+ 
 
  While Not SourceRecordset.EOF
 
 '*******************CHECK IF ALL PO CATEGORIES HAVE BEEN SELECTED FOR EACH PO ITEM & THE RECORDS ARE NOT LOCKED****************
   ItemSourceRecordset.Open "SELECT * FROM PODETAIL WHERE PONUMBER = " + CStr(SourceRecordset.Fields("PONUMBER")), SourceConn, adOpenKeyset
   While Not ItemSourceRecordset.EOF
-      If IsNull(ItemSourceRecordset.Fields("UDF_POCATEGORY")) Then
-        Err.Description = "Error: No Indiana PO Category for Po# " + CStr(SourceRecordset.Fields("PONUMBER")) + " Item# " + CStr(ItemSourceRecordset.Fields("Item"))
+      If IsNull(ItemSourceRecordset.Fields("UDFHSPOCAT")) Then
+        Err.Description = "Error: No Alabama PO Category for Po# " + CStr(SourceRecordset.Fields("PONUMBER")) + " Item# " + CStr(ItemSourceRecordset.Fields("Item"))
         GoTo ErrorHandler
     End If
     ItemSourceRecordset.Movenext
@@ -190,19 +115,17 @@ Const adCmdStoredProc = &H4
    GoTo ErrorHandler
   End If
   
-  '* M2m Vendor Number link field
-    M2MVendor = GetVendorNumber.Fields("UDFM2MVENDORNUMBER")
+  M2MVendor = GetVendorNumber.Fields("UDFM2MVENDORNUMBER")
   If (IsNull(M2MVendor)) Then
-    Err.Description = "Error: No Indiana M2M Vendor found for Cribmaster Vendor# " + CStr(SourceRecordset.Fields("Vendor")) + " found for PO# " + PONumber
+    Err.Description = "Error: No Alabama M2M Vendor found for Cribmaster Vendor# " + CStr(SourceRecordset.Fields("Vendor")) + " found for PO# " + PONumber
     GoTo ErrorHandler
   End If
   
 '*******************CHECK IF CRIBMASTER VENDOR HAS GOOD LINK TO M2M VENDOR***************
-'*apvend links to syaddr with the vendor number but syaddr also has SLCDPM vendors
   CompanySourceRecordset.Open "SELECT * FROM [APVEND],[SYADDR] WHERE [APVEND].FVENDNO = [SYADDR].FCALIASKEY AND fvendno = '" + M2MVendor + "' AND [SYADDR].FCALIAS = 'APVEND'", DestinationConn
 '  CompanySourceRecordset.Open "SELECT * FROM [APVEND],[SYADDR] WHERE [APVEND].FVENDNO = [SYADDR].FCALIASKEY AND fvendno = '" + GetVendorNumber.Fields("UDFM2MVENDORNUMBER") + "' AND [SYADDR].FCALIAS = 'APVEND'", DestinationConn
   If CompanySourceRecordset.RecordCount < 1 Then
-     Err.Description = "Error: Indiana Vendor #" + CStr(GetVendorNumber.Fields("UDFM2MVENDORNUMBER")) + " not in M2M for PO# " + CStr(SourceRecordset.Fields("PONumber"))
+     Err.Description = "Error: Alabama Vendor #" + CStr(GetVendorNumber.Fields("UDFM2MVENDORNUMBER")) + " not in M2M for PO# " + CStr(SourceRecordset.Fields("PONumber"))
      GoTo ErrorHandler
   End If
 '*******************GET STANDARD TERMS FROM M2M VENDOOR PAGE***************
@@ -215,7 +138,6 @@ Const adCmdStoredProc = &H4
   
   Dim SkipPO As Boolean
   SkipPO = False
-  '********************Update PoStatusNo field to Ordered if blanket po and do not create a master PO record
   If SourceRecordset.Fields("BLANKETPO") <> "" Then
      SourceRecordset.Fields("POStatusNo") = 0
      SourceRecordset.Update
@@ -282,18 +204,7 @@ Const adCmdStoredProc = &H4
    DestinationRecordset.Fields("feurofctr") = 0
    DestinationRecordset.Fields("fctype") = "O"
    DestinationRecordset.Fields("fmsnstreet") = CompanySourceRecordset.Fields("fmstreet")
-   DestinationRecordset.Fields("fpoclosing") = "Please reference our purchase order number on all correspondence.  " _
-   & "Notification of changes regarding quantities to be shipped and changes in the delivery schedule are required." + _
-   Chr(13) + Chr(13) + _
-   "PO APPROVALS:" + Chr(13) + Chr(13) + _
-   "Requr. _______________________________________" + Chr(13) + _
-   "Dept. Head ___________________________________" + Chr(13) + Chr(13) + _
-   "G.M. Only: All Items Over $500.00" + Chr(13) + _
-   "G.M ________________________________________" + Chr(13) + _
-   "VP/Group Controller. Only: All Assests/CER and ER Over $10,000.00" + Chr(13) + _
-   "VP/Group Controller _____________________________________" + Chr(13) + _
-   "Pres. Only: All Assets/CER/ER and/or PO’s Over $10,000.00" + Chr(13) + _
-   "President _____________________________________"
+   DestinationRecordset.Fields("fpoclosing") = "Please reference our purchase order number on all correspondence.  Notification of changes regarding quantities to be shipped and changes in the delivery schedule are required." + Chr(13) + "PO APPROVALS:" + Chr(13) + "Requr. _______________________________________" + Chr(13) + "Dept. Head ___________________________________" + Chr(13) + "G.M. Only: All Items Over $500.00" + Chr(13) + "G.M ________________________________________" + Chr(13) + "VP/CFO. Only: All Assests/CER and ER Over $10000.00" + Chr(13) + "VP/CFO _____________________________________" + Chr(13) + "Pres. Only: All Assets/CER/ER and/or POâ€™s Over $10000.00" + Chr(13) + "President _____________________________________"
    DestinationRecordset.Fields("fndbrmod") = 0
 
     DestinationRecordset.Fields("fcsncity") = CompanySourceRecordset.Fields("fccity")
@@ -304,14 +215,14 @@ Const adCmdStoredProc = &H4
     DestinationRecordset.Fields("fcsnfax") = CompanySourceRecordset.Fields("fcfax")
    
    
-    DestinationRecordset.Fields("fcshcompan") = "BUSCHE INDIANA"
-    DestinationRecordset.Fields("fcshcity") = "ALBION"
-    DestinationRecordset.Fields("fcshstate") = "IN"
-    DestinationRecordset.Fields("fcshzip") = "46701"
+    DestinationRecordset.Fields("fcshcompan") = "BUSCHE ALABAMA"
+    DestinationRecordset.Fields("fcshcity") = "HARTSELLE"
+    DestinationRecordset.Fields("fcshstate") = "AL"
+    DestinationRecordset.Fields("fcshzip") = "35640"
     DestinationRecordset.Fields("fcshcountr") = "USA"
-    DestinationRecordset.Fields("fcshphone") = "2606367030"
-    DestinationRecordset.Fields("fcshfax") = "2603637031"
-    DestinationRecordset.Fields("fmshstreet") = "1563 E. State Road 8"
+    DestinationRecordset.Fields("fcshphone") = "2567730137"
+    DestinationRecordset.Fields("fcshfax") = "2567512344"
+    DestinationRecordset.Fields("fmshstreet") = "1641 THOMPSON ROAD"
 
    DestinationRecordset.Update
    SourceRecordset.Fields("VendorPO") = CurrentPO
@@ -336,12 +247,12 @@ Const adCmdStoredProc = &H4
      ItemDestinationRecordset.Fields("fitemno") = "  " + Trim(CStr(NextItem))
     End If
     ItemDestinationRecordset.Fields("frelsno") = "  0"
-    If chkAl.Value = vbChecked Then
+    'If chkAl.Value = vbChecked Then
         ItemDestinationRecordset.Fields("fcategory") = ItemSourceRecordset.Fields("UDFHSPOCAT")
-    Else
+   ' Else
     '''''''''''''''''''''error'''''''''''''
-        ItemDestinationRecordset.Fields("fcategory") = ItemSourceRecordset.Fields("UDF_POCATEGORY")
-    End If
+    '    ItemDestinationRecordset.Fields("fcategory") = ItemSourceRecordset.Fields("UDF_POCATEGORY")
+    'End If
     ItemDestinationRecordset.Fields("fjoopno") = 0
     ItemDestinationRecordset.Fields("flstcost") = ItemSourceRecordset.Fields("Cost")
     ItemDestinationRecordset.Fields("fstdcost") = ItemSourceRecordset.Fields("Cost")
@@ -491,6 +402,7 @@ ErrorHandler:
  DestinationConn.Close
  
 End Function
+
 
 
 
