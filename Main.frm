@@ -245,11 +245,8 @@ Const adCmdStoredProc = &H4
    DestinationRecordset.Fields("fcshipto") = "SELF"
    DestinationRecordset.Fields("forddate") = FormatDateTime(SourceRecordset.Fields("POdate"), 2)
    DestinationRecordset.Fields("fstatus") = "OPEN"
-   If chkAl.Value = vbChecked Then
-       DestinationRecordset.Fields("fvendno") = GetVendorNumber.Fields("UDFHARTSELLEVENDOR")
-   Else
-      DestinationRecordset.Fields("fvendno") = GetVendorNumber.Fields("UDFM2MVENDORNUMBER")
-   End If
+   'Hartselle / Indiana diff
+   DestinationRecordset.Fields("fvendno") = GetVendorNumber.Fields("UDFM2MVENDORNUMBER")
    DestinationRecordset.Fields("fbuyer") = "CM"
    DestinationRecordset.Fields("fchangeby") = "CM"
    DestinationRecordset.Fields("fshipvia") = "UPS-OURS"
@@ -336,12 +333,8 @@ Const adCmdStoredProc = &H4
      ItemDestinationRecordset.Fields("fitemno") = "  " + Trim(CStr(NextItem))
     End If
     ItemDestinationRecordset.Fields("frelsno") = "  0"
-    If chkAl.Value = vbChecked Then
-        ItemDestinationRecordset.Fields("fcategory") = ItemSourceRecordset.Fields("UDFHSPOCAT")
-    Else
-    '''''''''''''''''''''error'''''''''''''
-        ItemDestinationRecordset.Fields("fcategory") = ItemSourceRecordset.Fields("UDF_POCATEGORY")
-    End If
+   'Hartselle / Indiana diff
+    ItemDestinationRecordset.Fields("fcategory") = ItemSourceRecordset.Fields("UDF_POCATEGORY")
     ItemDestinationRecordset.Fields("fjoopno") = 0
     ItemDestinationRecordset.Fields("flstcost") = ItemSourceRecordset.Fields("Cost")
     ItemDestinationRecordset.Fields("fstdcost") = ItemSourceRecordset.Fields("Cost")
